@@ -1,0 +1,22 @@
+name: linearEqn
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - pillow
+  - h5py
+  - opencv
+  - flask
+  - tensorflow=2.5
+  - scikit-image
+  - scikit-learn
+  - pip:
+      - imageio
+      - keras-preprocessing
+      - tqdm
+      - requests
