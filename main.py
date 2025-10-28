@@ -175,6 +175,9 @@ def get_response():
         logging.debug("Starting to process images...")
         path_list = glob.glob('img/*.png')
         logging.debug(f"Found images: {path_list}")
+        
+        if not path_list:
+            return {"Success": False, "Error": "No images found to process"}
 
         eq_list = get_equtaion_list(path_list)
         logging.debug(f"Extracted equation list: {eq_list}")
