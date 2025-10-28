@@ -18,14 +18,27 @@ pc = Predict()
 
 
 def get_equtaion_list(path_list):
+    import time
     main_list = []
-    for image_path in path_list:
+    for idx, image_path in enumerate(path_list):
+        logging.debug(f"Processing image {idx+1}/{len(path_list)}: {image_path}")
+        start_time = time.time()
+        
         char_list = []
         final_crop = cv2.imread(image_path)
+        if final_crop is None:
+            logging.error(f"Could not read image: {image_path}")
+            continue
+            
         bbgetter = getIMAGEPOSITION(image_path)
         bbs = bbgetter.get_bounding_box()
+        logging.debug(f"Found {len(bbs)} bounding boxes in {time.time() - start_time:.2f}s")
 
+        char_start_time = time.time()
         for i, c in enumerate(bbs):
+            if i % 5 == 0:  # Log progress every 5 characters
+                logging.debug(f"Processing character {i+1}/{len(bbs)}")
+            
             (x, y, w, h) = (c[0], c[1], c[2], c[3])
             roi = final_crop[y:h, x:w]
             height, width = roi.shape[0], roi.shape[1]
@@ -49,7 +62,11 @@ def get_equtaion_list(path_list):
                 char_list.append(str(result))
             else:
                 char_list.append('.')
+        
+        logging.debug(f"Character processing took {time.time() - char_start_time:.2f}s")
         main_list.append(char_list)
+        logging.debug(f"Total time for image {idx+1}: {time.time() - start_time:.2f}s")
+    
     return main_list
 
 
@@ -171,6 +188,9 @@ def solve_3d(equation_list):
 
 
 def get_response():
+    import time
+    overall_start = time.time()
+    
     try:
         logging.debug("Starting to process images...")
         path_list = glob.glob('img/*.png')
@@ -179,7 +199,15 @@ def get_response():
         if not path_list:
             return {"Success": False, "Error": "No images found to process"}
 
+        # Check if processing might timeout (limit to 150 seconds to be safe)
+        max_processing_time = 150
+        
+        logging.debug(f"Starting equation extraction at {time.time() - overall_start:.2f}s")
         eq_list = get_equtaion_list(path_list)
+        
+        if time.time() - overall_start > max_processing_time:
+            return {"Success": False, "Error": "Processing timeout - image too complex"}
+            
         logging.debug(f"Extracted equation list: {eq_list}")
 
         eq_str = convert_equation_list_to_string(eq_list)
